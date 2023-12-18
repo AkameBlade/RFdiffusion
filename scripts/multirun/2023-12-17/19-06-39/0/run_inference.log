@@ -1,8 +1,0 @@
-[2023-12-17 19:06:39,985][__main__][INFO] - ////////////////////////////////////////////////
-[2023-12-17 19:06:39,985][__main__][INFO] - ///// NO GPU DETECTED! Falling back to CPU /////
-[2023-12-17 19:06:39,985][__main__][INFO] - ////////////////////////////////////////////////
-[2023-12-17 19:06:39,986][rfdiffusion.inference.model_runners][INFO] - Reading checkpoint from /home/domain/ipermyakov/RFdiffusion/rfdiffusion/inference/../../models/Base_ckpt.pt
-[2023-12-17 19:06:45,506][rfdiffusion.inference.model_runners][INFO] - Loading checkpoint.
-[2023-12-17 19:06:51,542][rfdiffusion.diffusion][INFO] - Using cached IGSO3.
-[2023-12-17 19:06:51,638][__main__][INFO] - Making design samples/design_0
-[2023-12-17 19:06:51,646][rfdiffusion.inference.model_runners][INFO] - Using contig: None
