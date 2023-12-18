@@ -1,0 +1,2 @@
+[2023-12-18 12:16:00,288][__main__][INFO] - Found GPU with device_name NVIDIA GeForce RTX 3080. Will run RFdiffusion on NVIDIA GeForce RTX 3080
+[2023-12-18 12:16:00,288][rfdiffusion.inference.model_runners][INFO] - Reading checkpoint from ../../../RFdiffusion/models/ActiveSite_ckpt.pt

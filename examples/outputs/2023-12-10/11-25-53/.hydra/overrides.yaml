@@ -1,0 +1,6 @@
+- inference.output_prefix=example_outputs/design_partialdiffusion_peptidewithmultiplesequence
+- inference.input_pdb=input_pdbs/peptide_complex_ideal_helix.pdb
+- contigmap.contigs=["172-172/0 34-34"]
+- diffuser.partial_T=10
+- inference.num_designs=10
+- contigmap.provide_seq=[172-177,200-205]
