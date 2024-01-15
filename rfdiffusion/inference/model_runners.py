@@ -152,6 +152,9 @@ class Sampler:
         self.target_feats = iu.process_target(self.inf_conf.input_pdb, parse_hetatom=True, center=False)
         self.chain_idx = None
 
+
+        
+
         ##############################
         ### Handle Partial Noising ###
         ##############################
@@ -370,6 +373,10 @@ class Sampler:
         xT = fa_stack[-1].squeeze()[:,:14,:]
         xt = torch.clone(xT)
 
+
+        xT_true = xyz_true.squeeze()[:,:14,:]
+        xt_true = torch.clone(xT_true)
+
         self.denoiser = self.construct_denoiser(len(self.contig_map.ref), visible=self.mask_seq.squeeze())
 
         ######################
@@ -404,9 +411,9 @@ class Sampler:
                     pot.diffusion_mask = self.diffusion_mask.squeeze()
                     pot.xyz_motif = xyz_motif_prealign
                     pot.diffuser = self.diffuser
-        return xt, seq_t
+        return xt, seq_t, xt_true
 
-    def _preprocess(self, seq, xyz_t, t, repack=False):
+    def _preprocess(self, seq, xyz_t, t, x_true, repack=False):
         
         """
         Function to prepare inputs to diffusion model
@@ -489,10 +496,49 @@ class Sampler:
         xyz_t=xyz_t[None, None]
         xyz_t = torch.cat((xyz_t, torch.full((1,1,L,13,3), float('nan'))), dim=3)
 
+
+        if self.preprocess_conf.sidechain_input:
+            x_true[torch.where(seq == 21, True, False),3:,:] = float('nan')
+        else:
+            x_true[~self.mask_str.squeeze(),3:,:] = float('nan')
+
+        x_true=x_true[None, None]
+        x_true = torch.cat((x_true, torch.full((1,1,L,13,3), float('nan'))), dim=3)
+
+        
+
+
         ###########
         ### t2d ###
         ###########
-        t2d = xyz_to_t2d(xyz_t)
+        print('param50')
+        PARAMS = {
+                    "DMIN"    : 2.0,
+                    "DMAX"    : 20.0,
+                    "DBINS"   : 36,
+                    "ABINS"   : 36,
+                }
+
+        t2d = xyz_to_t2d(xyz_t,  params=PARAMS)
+
+        if self.contig_map.secstruc_str is not None:
+            PARAMS = {
+                        "DMIN"    : 2.0,
+                        "DMAX"    : 50.0,
+                        "DBINS"   : 36,
+                        "ABINS"   : 36,
+                    }
+            t2d_2 = xyz_to_t2d(x_true,  params=PARAMS)
+
+            secstruc_mask = np.empty(t2d.shape[:-1])
+            matrix = np.outer(self.contig_map.secstruc_str,self.contig_map.secstruc_str)
+            secstruc_mask[:,:] = matrix
+
+            secstruc_mask = torch.from_numpy(secstruc_mask).bool()
+
+            t2d[secstruc_mask] = t2d_2[secstruc_mask]
+
+
         
         ###########      
         ### idx ###
@@ -621,7 +667,7 @@ class SelfConditioning(Sampler):
     pX0[t+1] is provided as a template input to the model at time t
     """
 
-    def sample_step(self, *, t, x_t, seq_init, final_step):
+    def sample_step(self, *, t, x_t, seq_init, final_step, x_true):
         '''
         Generate the next pose that the model should be supplied at timestep t-1.
         Args:
@@ -636,14 +682,19 @@ class SelfConditioning(Sampler):
             plddt: (L, 1) Predicted lDDT of x0.
         '''
 
+        #print(x_true.shape)
+
         msa_masked, msa_full, seq_in, xt_in, idx_pdb, t1d, t2d, xyz_t, alpha_t = self._preprocess(
-            seq_init, x_t, t)
+            seq_init, x_t, t, x_true)
+
         B,N,L = xyz_t.shape[:3]
 
         ##################################
         ######## Str Self Cond ###########
         ##################################
-        if (t < self.diffuser.T) and (t != self.diffuser_conf.partial_T):   
+        
+        '''
+        if (t < self.diffuser.T - 25) and (t != self.diffuser_conf.partial_T):   
             zeros = torch.zeros(B,1,L,24,3).float().to(xyz_t.device)
             xyz_t = torch.cat((self.prev_pred.unsqueeze(1),zeros), dim=-2) # [B,T,L,27,3]
             t2d_44   = xyz_to_t2d(xyz_t) # [B,T,L,L,44]
@@ -652,6 +703,7 @@ class SelfConditioning(Sampler):
             t2d_44   = torch.zeros_like(t2d[...,:44])
         # No effect if t2d is only dim 44
         t2d[...,:44] = t2d_44
+        '''
 
         if self.symmetry is not None:
             idx_pdb, self.chain_idx = self.symmetry.res_idx_procesing(res_idx=idx_pdb)

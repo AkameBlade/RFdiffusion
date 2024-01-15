@@ -27,6 +27,7 @@ class ContigMap:
         inpaint_str_tensor=None,
         topo=False,
         provide_seq=None,
+        secstruc_str=None
     ):
         # sanity checks
         if contigs is None and ref_idx is None:
@@ -54,6 +55,13 @@ class ContigMap:
         self.inpaint_str = (
             "/".join(inpaint_str).split("/") if inpaint_str is not None else None
         )
+                
+        self.secstruc_str = (
+            "/".join(secstruc_str).split("/") if secstruc_str is not None else None
+        )
+
+       
+
         self.inpaint_seq_tensor = inpaint_seq_tensor
         self.inpaint_str_tensor = inpaint_str_tensor
         self.parsed_pdb = parsed_pdb
@@ -104,6 +112,12 @@ class ContigMap:
                 )
         else:
             self.inpaint_str = self.inpaint_str_tensor
+
+        if self.secstruc_str is not None:
+            self.secstruc_str = self.get_secstruc_str(self.secstruc_str)
+        else:
+            self.secstruc_str = None
+
         # get 0-indexed input/output (for trb file)
         (
             self.ref_idx0,
@@ -327,6 +341,32 @@ class ContigMap:
         for res in inpaint_s_list:
             if res in self.ref:
                 s_mask[self.ref.index(res)] = False  # mask this residue
+
+        return np.array(s_mask)
+    
+    def get_secstruc_str(self, inpaint_s):
+        """
+        function to generate inpaint_str or inpaint_seq masks specific to this contig
+        """
+        s_mask = np.copy(self.mask_1d)
+        s_mask = np.full(s_mask.shape, False)
+
+        inpaint_s_list = []
+        for i in inpaint_s:
+            if "-" in i:
+                inpaint_s_list.extend(
+                    [
+                        (i[0], p)
+                        for p in range(
+                            int(i.split("-")[0][1:]), int(i.split("-")[1]) + 1
+                        )
+                    ]
+                )
+            else:
+                inpaint_s_list.append((i[0], int(i[1:])))
+        for res in inpaint_s_list:
+            if res in self.ref:
+                s_mask[self.ref.index(res)] = True  # mask this residue
 
         return np.array(s_mask)
 

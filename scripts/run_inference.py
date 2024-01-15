@@ -81,7 +81,7 @@ def main(conf: HydraConfig) -> None:
             )
             continue
 
-        x_init, seq_init = sampler.sample_init()
+        x_init, seq_init, xt_true = sampler.sample_init()
         denoised_xyz_stack = []
         px0_xyz_stack = []
         seq_stack = []
@@ -89,10 +89,13 @@ def main(conf: HydraConfig) -> None:
 
         x_t = torch.clone(x_init)
         seq_t = torch.clone(seq_init)
+        x_true = torch.clone(xt_true)
+
         # Loop over number of reverse diffusion time steps.
         for t in range(int(sampler.t_step_input), sampler.inf_conf.final_step - 1, -1):
             px0, x_t, seq_t, plddt = sampler.sample_step(
-                t=t, x_t=x_t, seq_init=seq_t, final_step=sampler.inf_conf.final_step
+                t=t, x_t=x_t, seq_init=seq_t, final_step=sampler.inf_conf.final_step,
+                x_true=x_true
             )
             px0_xyz_stack.append(px0)
             denoised_xyz_stack.append(x_t)
