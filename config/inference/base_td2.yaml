@@ -104,6 +104,7 @@ contig_settings:
   idx_rf: null
   inpaint_seq_tensor: null
 preprocess:
+  td2_dist: 40.0
   sidechain_input: false
   motif_sidechain_input: true
   d_t1d: 22

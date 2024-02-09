@@ -511,7 +511,7 @@ class Sampler:
         ###########
         ### t2d ###
         ###########
-        print('param50')
+
         PARAMS = {
                     "DMIN"    : 2.0,
                     "DMAX"    : 20.0,
@@ -523,10 +523,10 @@ class Sampler:
 
         if self.contig_map.secstruc_str is not None:
             PARAMS = {
-                        "DMIN"    : 2.0,
-                        "DMAX"    : 50.0,
-                        "DBINS"   : 36,
-                        "ABINS"   : 36,
+                        "DMIN"    : self._conf['preprocess']['DMIN'],
+                        "DMAX"    : self._conf['preprocess']['DMAX'],
+                        "DBINS"   : self._conf['preprocess']['DBINS'],
+                        "ABINS"   : self._conf['preprocess']['ABINS'],
                     }
             t2d_2 = xyz_to_t2d(x_true,  params=PARAMS)
 

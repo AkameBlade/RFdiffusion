@@ -30,6 +30,7 @@ contigmap:
   length: null
   secstruc_str: null
 
+
 model:
   n_extra_block: 4
   n_main_block: 32
@@ -110,6 +111,10 @@ contig_settings:
   inpaint_seq_tensor: null
 
 preprocess:
+  DMIN: 2.0
+  DMAX: 50.0
+  DBINS: 36
+  ABINS: 36
   sidechain_input: False
   motif_sidechain_input: True
   d_t1d: 22
